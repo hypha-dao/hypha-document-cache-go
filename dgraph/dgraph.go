@@ -154,7 +154,7 @@ func (m *Dgraph) MutateJSONStr(vb []byte, deleteOp bool) (*api.Response, error) 
 	} else {
 		mutation.SetJson = vb
 	}
-	return m.Mutate(mutation)
+	return m.MutateOne(mutation)
 }
 
 //MutateNQuads Performs a nquads mutation
@@ -166,7 +166,7 @@ func (m *Dgraph) MutateNQuads(v string, deleteOp bool) (*api.Response, error) {
 	} else {
 		mutation.SetNquads = vb
 	}
-	return m.Mutate(mutation)
+	return m.MutateOne(mutation)
 }
 
 //DeleteNQuads Performs a nquads delete
@@ -188,22 +188,34 @@ func edgeTriplet(uidFrom, uidTo, edgeName string) string {
 	return fmt.Sprintf("<%v> <%v> <%v> .", uidFrom, edgeName, uidTo)
 }
 
-//Mutate Performs a mutation
-func (m *Dgraph) Mutate(mutation *api.Mutation) (*api.Response, error) {
+//Mutate Performs multiple mutations
+func (m *Dgraph) Mutate(mutations ...*api.Mutation) ([]*api.Response, error) {
+	responses := make([]*api.Response, len(mutations), len(mutations))
 	txn := m.Txn(false)
 	ctx := context.Background()
 	defer txn.Discard(ctx)
-	assigned, err := txn.Mutate(ctx, mutation)
+	for _, mutation := range mutations {
+		response, err := txn.Mutate(ctx, mutation)
+		if err != nil {
+			return nil, err
+		}
+		responses = append(responses, response)
+	}
 
+	err := txn.Commit(ctx)
 	if err != nil {
 		return nil, err
 	}
+	return responses, nil
+}
 
-	err = txn.Commit(ctx)
+//MutateOne Performs a single mutation
+func (m *Dgraph) MutateOne(mutation *api.Mutation) (*api.Response, error) {
+	responses, err := m.Mutate(mutation)
 	if err != nil {
 		return nil, err
 	}
-	return assigned, err
+	return responses[0], nil
 }
 
 //Drop performs a Drop Operation

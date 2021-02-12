@@ -105,10 +105,10 @@ func TestUpdateSchema(t *testing.T) {
 		t.Fatalf("GetTypeFieldMap failed: %v", err)
 	}
 	expectedFieldMap := map[string]*SchemaField{
-		"hash":         &SchemaField{"hash"},
-		"created_date": &SchemaField{"created_date"},
-		"creator":      &SchemaField{"creator"},
-		"contents":     &SchemaField{"contents"},
+		"hash":         {"hash"},
+		"created_date": {"created_date"},
+		"creator":      {"creator"},
+		"contents":     {"contents"},
 	}
 	if !reflect.DeepEqual(fieldMap, expectedFieldMap) {
 		t.Fatalf("Expected fieldMap: %v found: %v", expectedFieldMap, fieldMap)
