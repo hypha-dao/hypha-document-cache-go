@@ -34,10 +34,9 @@ func beforeAll() {
 	if err != nil {
 		log.Fatalf("Unable to drop all: %v", err)
 	}
-	doccache = New(dg)
-	err = doccache.PrepareSchema()
+	doccache, err = New(dg)
 	if err != nil {
-		log.Fatalf("Failed preparing schema: %v", err)
+		log.Fatalf("Failed creating docCache: %v", err)
 	}
 }
 
@@ -46,8 +45,11 @@ func afterAll() {
 }
 
 func TestOpCycle(t *testing.T) {
+	if doccache.cursor.UID == "" {
+		t.Fatalf("Cursor should have UID already, it should be initialized on the creation of the doccache")
+	}
+
 	createdDate := "2020-11-12T18:27:47.000"
-	t.Logf("Created date: %v", createdDate)
 	chainDoc1 := &ChainDocument{
 		ID:          0,
 		Hash:        "d4ec74355830056924c83f20ffb1a22ad0c5145a96daddf6301897a092de951e",
@@ -89,8 +91,8 @@ func TestOpCycle(t *testing.T) {
 	}
 
 	t.Logf("Storing new document")
-
-	err := doccache.StoreDocument(chainDoc1)
+	cursor := "cursor1"
+	err := doccache.StoreDocument(chainDoc1, cursor)
 	if err != nil {
 		t.Fatalf("StoreDocument failed: %v", err)
 	}
@@ -100,7 +102,7 @@ func TestOpCycle(t *testing.T) {
 		t.Fatalf("GetByHash failed: %v", err)
 	}
 	compareDocs(expectedDoc1, doc, t)
-
+	validateCursor(cursor, t)
 	t.Logf("Updating document certificates")
 
 	certificationDate := "2020-11-12T20:27:47.000"
@@ -120,8 +122,8 @@ func TestOpCycle(t *testing.T) {
 			DType:                 []string{"Certificate"},
 		},
 	}
-
-	err = doccache.StoreDocument(chainDoc1)
+	cursor = "cursor2"
+	err = doccache.StoreDocument(chainDoc1, cursor)
 	if err != nil {
 		t.Fatalf("StoreDocument failed: %v", err)
 	}
@@ -131,6 +133,7 @@ func TestOpCycle(t *testing.T) {
 		t.Fatalf("GetByHash failed: %v", err)
 	}
 	compareDocs(expectedDoc1, doc, t)
+	validateCursor(cursor, t)
 
 	t.Logf("Updating document certificates 2")
 
@@ -148,7 +151,8 @@ func TestOpCycle(t *testing.T) {
 		DType:                 []string{"Certificate"},
 	})
 
-	err = doccache.StoreDocument(chainDoc1)
+	cursor = "cursor3"
+	err = doccache.StoreDocument(chainDoc1, cursor)
 	if err != nil {
 		t.Fatalf("StoreDocument failed: %v", err)
 	}
@@ -158,6 +162,7 @@ func TestOpCycle(t *testing.T) {
 		t.Fatalf("GetByHash failed: %v", err)
 	}
 	compareDocs(expectedDoc1, doc, t)
+	validateCursor(cursor, t)
 
 	createdDate = "2020-11-12T22:09:12.000"
 	chainDoc2 := &ChainDocument{
@@ -237,8 +242,9 @@ func TestOpCycle(t *testing.T) {
 		},
 	}
 
+	cursor = "cursor4"
 	t.Log("Storing another document")
-	err = doccache.StoreDocument(chainDoc2)
+	err = doccache.StoreDocument(chainDoc2, cursor)
 	if err != nil {
 		t.Fatalf("StoreDocument failed: %v", err)
 	}
@@ -248,6 +254,7 @@ func TestOpCycle(t *testing.T) {
 		t.Fatalf("GetByHash failed: %v", err)
 	}
 	compareDocs(expectedDoc2, doc, t)
+	validateCursor(cursor, t)
 
 	t.Log("Check original document wasn't modified")
 	doc, err = doccache.GetByHash("d4ec74355830056924c83f20ffb1a22ad0c5145a96daddf6301897a092de951e", &RequestConfig{ContentGroups: true, Certificates: true})
@@ -257,11 +264,12 @@ func TestOpCycle(t *testing.T) {
 	compareDocs(expectedDoc1, doc, t)
 
 	t.Log("Adding edge")
+	cursor = "cursor5"
 	err = doccache.MutateEdge(&ChainEdge{
 		Name: "member",
 		From: "d4ec74355830056924c83f20ffb1a22ad0c5145a96daddf6301897a092de951e",
 		To:   "4190fc69b4f88f23ae45828a2df64f79bd687a3cdba8c84fa5a89ce9b88de8ff",
-	}, false)
+	}, false, cursor)
 	if err != nil {
 		t.Fatalf("MutateEdge for adding failed: %v", err)
 	}
@@ -291,13 +299,15 @@ func TestOpCycle(t *testing.T) {
 	if hash != "4190fc69b4f88f23ae45828a2df64f79bd687a3cdba8c84fa5a89ce9b88de8ff" {
 		t.Fatalf("Expected hash to be: 4190fc69b4f88f23ae45828a2df64f79bd687a3cdba8c84fa5a89ce9b88de8ff found: %v", hash)
 	}
+	validateCursor(cursor, t)
 
 	t.Log("Adding same edge")
+	cursor = "cursor6"
 	err = doccache.MutateEdge(&ChainEdge{
 		Name: "member",
 		From: "d4ec74355830056924c83f20ffb1a22ad0c5145a96daddf6301897a092de951e",
 		To:   "4190fc69b4f88f23ae45828a2df64f79bd687a3cdba8c84fa5a89ce9b88de8ff",
-	}, false)
+	}, false, cursor)
 	if err != nil {
 		t.Fatalf("MutateEdge for adding failed: %v", err)
 	}
@@ -327,13 +337,15 @@ func TestOpCycle(t *testing.T) {
 	if hash != "4190fc69b4f88f23ae45828a2df64f79bd687a3cdba8c84fa5a89ce9b88de8ff" {
 		t.Fatalf("Expected hash to be: 4190fc69b4f88f23ae45828a2df64f79bd687a3cdba8c84fa5a89ce9b88de8ff found: %v", hash)
 	}
+	validateCursor(cursor, t)
 
 	t.Log("Removing edge")
+	cursor = "cursor7"
 	err = doccache.MutateEdge(&ChainEdge{
 		Name: "member",
 		From: "d4ec74355830056924c83f20ffb1a22ad0c5145a96daddf6301897a092de951e",
 		To:   "4190fc69b4f88f23ae45828a2df64f79bd687a3cdba8c84fa5a89ce9b88de8ff",
-	}, true)
+	}, true, cursor)
 	if err != nil {
 		t.Fatalf("MutateEdge for removing failed: %v", err)
 	}
@@ -350,13 +362,15 @@ func TestOpCycle(t *testing.T) {
 	if ok {
 		t.Fatal("Expected not to find member edge")
 	}
+	validateCursor(cursor, t)
 
 	t.Log("Removing edge 2")
+	cursor = "cursor8"
 	err = doccache.MutateEdge(&ChainEdge{
 		Name: "member",
 		From: "d4ec74355830056924c83f20ffb1a22ad0c5145a96daddf6301897a092de951e",
 		To:   "4190fc69b4f88f23ae45828a2df64f79bd687a3cdba8c84fa5a89ce9b88de8ff",
-	}, true)
+	}, true, cursor)
 	if err != nil {
 		t.Fatalf("MutateEdge for removing failed: %v", err)
 	}
@@ -373,7 +387,21 @@ func TestOpCycle(t *testing.T) {
 	if ok {
 		t.Fatal("Expected not to find member edge")
 	}
+	validateCursor(cursor, t)
 
+}
+
+func validateCursor(cursor string, t *testing.T) {
+	if doccache.cursor.Cursor != cursor {
+		t.Fatalf("Expected in memory cursor to be %v found: %v", cursor, doccache.cursor.Cursor)
+	}
+	c, err := doccache.getCursor()
+	if err != nil {
+		t.Fatalf("GetCursor failed: %v", err)
+	}
+	if c.Cursor != cursor {
+		t.Fatalf("Expected in db cursor to be %v found: %v", cursor, c.Cursor)
+	}
 }
 
 func compareDocs(expected, actual *Document, t *testing.T) {

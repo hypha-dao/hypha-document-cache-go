@@ -12,6 +12,7 @@ import (
 	"github.com/sebastianmontero/dfuse-firehose-client/dfclient"
 	"github.com/sebastianmontero/hypha-document-cache-go/dgraph"
 	"github.com/sebastianmontero/hypha-document-cache-go/doccache"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -38,7 +39,7 @@ func (m *deltaStreamHandler) OnDelta(delta *dfclient.TableDelta, cursor string, 
 				panic(fmt.Sprintln("Error unmarshalling doc new data: ", err))
 			}
 			fmt.Println("Storing doc: ", chainDoc)
-			err = m.doccache.StoreDocument(chainDoc)
+			err = m.doccache.StoreDocument(chainDoc, cursor)
 			if err != nil {
 				fmt.Println("Failed to store doc: ", err)
 				panic(fmt.Sprintln("Failed to store doc: ", err))
@@ -49,7 +50,7 @@ func (m *deltaStreamHandler) OnDelta(delta *dfclient.TableDelta, cursor string, 
 				fmt.Println("Error unmarshalling doc old data: ", err)
 				panic(fmt.Sprintln("Error unmarshalling doc old data: ", err))
 			}
-			err = m.doccache.DeleteDocument(chainDoc)
+			err = m.doccache.DeleteDocument(chainDoc, cursor)
 			if err != nil {
 				fmt.Println("Failed to delete doc: ", err)
 				panic(fmt.Sprintln("Failed to delete doc: ", err))
@@ -74,7 +75,7 @@ func (m *deltaStreamHandler) OnDelta(delta *dfclient.TableDelta, cursor string, 
 				fmt.Println("Error unmarshalling edge data: ", err)
 				// panic(fmt.Sprintln("Error unmarshalling edge data: ", err))
 			}
-			err = m.doccache.MutateEdge(chainEdge, deleteOp)
+			err = m.doccache.MutateEdge(chainEdge, deleteOp, cursor)
 			if err != nil {
 				fmt.Printf("Failed to mutate doc, deleteOp: %v, edge: %v, err: %v", deleteOp, chainEdge, err)
 				// panic(fmt.Sprintf("Failed to mutate doc, deleteOp: %v, edge: %v, err: %v ", deleteOp, chainEdge, err))
@@ -115,7 +116,7 @@ func main() {
 		startBlock,
 	)
 
-	client, err := dfclient.NewDfClient(firehoseEndpoint, dfuseAPIKey, eosEndpoint)
+	client, err := dfclient.NewDfClient(firehoseEndpoint, dfuseAPIKey, eosEndpoint, log.InfoLevel)
 	if err != nil {
 		panic(fmt.Sprintln("Error creating dfclient: ", err))
 	}
@@ -123,10 +124,9 @@ func main() {
 	if err != nil {
 		panic(fmt.Sprintln("Error creating dgraph client: ", err))
 	}
-	cache := doccache.New(dg)
-	err = cache.PrepareSchema()
+	cache, err := doccache.New(dg)
 	if err != nil {
-		panic(fmt.Sprintln("Error preparing dgraph schema: ", err))
+		panic(fmt.Sprintln("Error creating doccache client: ", err))
 	}
 
 	// client.BlockStream(&pbbstream.BlocksRequestV2{

@@ -137,28 +137,42 @@ func (m *Dgraph) GetTypeFieldMap(typeName string) (map[string]*SchemaField, erro
 	return fieldMap, nil
 }
 
-//MutateJSON Performs a json mutation
-func (m *Dgraph) MutateJSON(v interface{}, deleteOp bool) (*api.Response, error) {
+//JSONMutation Returns a json mutation
+func (m *Dgraph) JSONMutation(v interface{}, deleteOp bool) (*api.Mutation, error) {
 	vb, err := json.Marshal(v)
 	if err != nil {
 		return nil, err
 	}
-	return m.MutateJSONStr(vb, deleteOp)
+	return m.JSONStrMutation(vb, deleteOp), nil
 }
 
-//MutateJSONStr Performs a json mutation
-func (m *Dgraph) MutateJSONStr(vb []byte, deleteOp bool) (*api.Response, error) {
+//MutateJSON Performs a json mutation
+func (m *Dgraph) MutateJSON(v interface{}, deleteOp bool) (*api.Response, error) {
+	mutation, err := m.JSONMutation(v, deleteOp)
+	if err != nil {
+		return nil, err
+	}
+	return m.MutateOne(mutation)
+}
+
+//JSONStrMutation Returns a json mutation
+func (m *Dgraph) JSONStrMutation(vb []byte, deleteOp bool) *api.Mutation {
 	mutation := &api.Mutation{}
 	if deleteOp {
 		mutation.DeleteJson = vb
 	} else {
 		mutation.SetJson = vb
 	}
-	return m.MutateOne(mutation)
+	return mutation
 }
 
-//MutateNQuads Performs a nquads mutation
-func (m *Dgraph) MutateNQuads(v string, deleteOp bool) (*api.Response, error) {
+//MutateJSONStr Performs a json mutation
+func (m *Dgraph) MutateJSONStr(vb []byte, deleteOp bool) (*api.Response, error) {
+	return m.MutateOne(m.JSONStrMutation(vb, deleteOp))
+}
+
+//NQuadsMutation Returns a nquads mutation
+func (m *Dgraph) NQuadsMutation(v string, deleteOp bool) *api.Mutation {
 	mutation := &api.Mutation{}
 	vb := []byte(v)
 	if deleteOp {
@@ -166,22 +180,42 @@ func (m *Dgraph) MutateNQuads(v string, deleteOp bool) (*api.Response, error) {
 	} else {
 		mutation.SetNquads = vb
 	}
-	return m.MutateOne(mutation)
+	return mutation
+}
+
+//MutateNQuads Performs a nquads mutation
+func (m *Dgraph) MutateNQuads(v string, deleteOp bool) (*api.Response, error) {
+	return m.MutateOne(m.NQuadsMutation(v, deleteOp))
+}
+
+//DeleteNQuadsMutation Returns a nquads delete
+func (m *Dgraph) DeleteNQuadsMutation(v string) *api.Mutation {
+	return m.NQuadsMutation(v, true)
 }
 
 //DeleteNQuads Performs a nquads delete
 func (m *Dgraph) DeleteNQuads(v string) (*api.Response, error) {
-	return m.MutateNQuads(v, true)
+	return m.MutateOne(m.DeleteNQuadsMutation(v))
+}
+
+//DeleteNodeMutation Returns delete Node Mutation
+func (m *Dgraph) DeleteNodeMutation(uid string) *api.Mutation {
+	return m.DeleteNQuadsMutation(fmt.Sprintf("<%v> * * .", uid))
 }
 
 //DeleteNode Deletes a Node
 func (m *Dgraph) DeleteNode(uid string) (*api.Response, error) {
-	return m.DeleteNQuads(fmt.Sprintf("<%v> * * .", uid))
+	return m.MutateOne(m.DeleteNodeMutation(uid))
+}
+
+//EdgeMutation Returns a mutate edge mutation
+func (m *Dgraph) EdgeMutation(uidFrom, uidTo, edgeName string, deleteOp bool) *api.Mutation {
+	return m.NQuadsMutation(edgeTriplet(uidFrom, uidTo, edgeName), deleteOp)
 }
 
 //MutateEdge Mutates an edge
 func (m *Dgraph) MutateEdge(uidFrom, uidTo, edgeName string, deleteOp bool) (*api.Response, error) {
-	return m.MutateNQuads(edgeTriplet(uidFrom, uidTo, edgeName), deleteOp)
+	return m.MutateOne(m.EdgeMutation(uidFrom, uidTo, edgeName, deleteOp))
 }
 
 func edgeTriplet(uidFrom, uidTo, edgeName string) string {
@@ -190,7 +224,7 @@ func edgeTriplet(uidFrom, uidTo, edgeName string) string {
 
 //Mutate Performs multiple mutations
 func (m *Dgraph) Mutate(mutations ...*api.Mutation) ([]*api.Response, error) {
-	responses := make([]*api.Response, len(mutations), len(mutations))
+	responses := make([]*api.Response, 0, len(mutations))
 	txn := m.Txn(false)
 	ctx := context.Background()
 	defer txn.Discard(ctx)

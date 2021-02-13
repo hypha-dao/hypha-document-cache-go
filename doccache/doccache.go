@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/dgraph-io/dgo/v2/protos/api"
 	"github.com/sebastianmontero/hypha-document-cache-go/dgraph"
 )
 
@@ -36,6 +37,10 @@ const schema = `
         certification_date
         certification_sequence
       }
+
+			type Cursor {
+				cursor
+			}
       
       hash: string @index(exact) .
       created_date: datetime .
@@ -56,6 +61,8 @@ const schema = `
       notes: string .
       certification_date: datetime .
       certification_sequence: int .
+
+			cursor: string @index(term) .
     `
 const contentGroupsRequest = `
       content_groups (orderasc:content_group_sequence){
@@ -93,19 +100,31 @@ type RequestConfig struct {
 type Doccache struct {
 	dgraph           *dgraph.Dgraph
 	documentFieldMap map[string]*dgraph.SchemaField
+	cursor           *Cursor
 }
 
 //New creates a new doccache
-func New(dg *dgraph.Dgraph) *Doccache {
-	return &Doccache{
+func New(dg *dgraph.Dgraph) (*Doccache, error) {
+	m := &Doccache{
 		dgraph:           dg,
 		documentFieldMap: make(map[string]*dgraph.SchemaField),
 	}
+
+	err := m.PrepareSchema()
+	if err != nil {
+		return nil, err
+	}
+	cursor, err := m.getCursor()
+	if err != nil {
+		return nil, err
+	}
+	m.cursor = cursor
+	return m, nil
 }
 
 //SchemaExists set the base document schema in dgraph
 func (m *Doccache) SchemaExists() (bool, error) {
-	missing, err := m.dgraph.MissingTypes([]string{"Document", "ContentGroup", "Content", "Certificate"})
+	missing, err := m.dgraph.MissingTypes([]string{"Document", "ContentGroup", "Content", "Certificate", "Cursor"})
 	if err != nil {
 		return false, err
 	}
@@ -126,6 +145,51 @@ func (m *Doccache) PrepareSchema() error {
 	}
 	m.documentFieldMap, err = m.dgraph.GetTypeFieldMap("Document")
 	return err
+}
+
+//GetCursor Finds the current cursor
+func (m *Doccache) getCursor() (*Cursor, error) {
+	query := `
+		{
+			cursors(func: type(Cursor)){
+				uid
+				cursor
+				dgraph.type
+			}
+		}
+	`
+	cursors := &Cursors{}
+	err := m.dgraph.Query(query, nil, cursors)
+	if err != nil {
+		return nil, err
+	}
+	if len(cursors.Cursors) > 0 {
+		return cursors.Cursors[0], nil
+	}
+
+	return m.createCursor()
+}
+
+func (m *Doccache) createCursor() (*Cursor, error) {
+	cursor := &Cursor{
+		DType: []string{"Cursor"},
+	}
+	mutation, err := m.cursorMutation(cursor)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := m.dgraph.MutateOne(mutation)
+	if err != nil {
+		return nil, err
+	}
+	for _, uid := range resp.GetUids() {
+		cursor.UID = uid
+	}
+	return cursor, nil
+}
+
+func (m *Doccache) cursorMutation(cursor *Cursor) (*api.Mutation, error) {
+	return m.dgraph.JSONMutation(cursor, false)
 }
 
 //GetByHash Finds document by hash
@@ -211,8 +275,18 @@ func (m *Doccache) GetUID(hash string) (string, error) {
 	return "", nil
 }
 
+func (m *Doccache) mutate(mutation *api.Mutation, cursor string) error {
+	m.cursor.Cursor = cursor
+	cursorMutation, err := m.cursorMutation(m.cursor)
+	if err != nil {
+		return err
+	}
+	_, err = m.dgraph.Mutate(mutation, cursorMutation)
+	return err
+}
+
 //StoreDocument Creates a new document or updates its certificates
-func (m *Doccache) StoreDocument(chainDoc *ChainDocument) error {
+func (m *Doccache) StoreDocument(chainDoc *ChainDocument, cursor string) error {
 	doc, err := m.GetByHash(chainDoc.Hash, &RequestConfig{Certificates: true})
 	if err != nil {
 		return err
@@ -228,27 +302,30 @@ func (m *Doccache) StoreDocument(chainDoc *ChainDocument) error {
 		doc.UpdateCertificates(chainDoc.Certificates)
 	}
 
-	_, err = m.dgraph.MutateJSON(doc, false)
-	return err
+	mutation, err := m.dgraph.JSONMutation(doc, false)
+	if err != nil {
+		return err
+	}
+	return m.mutate(mutation, cursor)
 }
 
 //DeleteDocument Deletes a document
-func (m *Doccache) DeleteDocument(chainDoc *ChainDocument) error {
+func (m *Doccache) DeleteDocument(chainDoc *ChainDocument, cursor string) error {
 	uid, err := m.GetUID(chainDoc.Hash)
 	if err != nil {
 		return err
 	}
 	if uid != "" {
 		log.Printf("Deleting Node: <%v>%v", uid, chainDoc.Hash)
-		_, err = m.dgraph.DeleteNode(uid)
-		return err
+		mutation := m.dgraph.DeleteNodeMutation(uid)
+		return m.mutate(mutation, cursor)
 	}
 	log.Printf("Document: %v not found, couldn't delete", chainDoc.Hash)
 	return nil
 }
 
 //MutateEdge Creates/Deletes an edge
-func (m *Doccache) MutateEdge(chainEdge *ChainEdge, deleteOp bool) error {
+func (m *Doccache) MutateEdge(chainEdge *ChainEdge, deleteOp bool, cursor string) error {
 	err := m.updateDocumentTypeSchema(chainEdge.Name)
 	if err != nil {
 		return err
@@ -266,8 +343,8 @@ func (m *Doccache) MutateEdge(chainEdge *ChainEdge, deleteOp bool) error {
 		return fmt.Errorf("To node of the relationship: [Edge: %v, From: %v, To: %v] does not exist, Delete Op: %v", chainEdge.Name, chainEdge.From, chainEdge.To, deleteOp)
 	}
 	log.Printf("Mutating [Edge: %v, From: <%v>%v, To: <%v>%v] Delete Op: %v", chainEdge.Name, fromUID, chainEdge.From, toUID, chainEdge.To, deleteOp)
-	_, err = m.dgraph.MutateEdge(fromUID, toUID, chainEdge.Name, deleteOp)
-	return err
+	mutation := m.dgraph.EdgeMutation(fromUID, toUID, chainEdge.Name, deleteOp)
+	return m.mutate(mutation, cursor)
 
 }
 

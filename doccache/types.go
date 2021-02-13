@@ -208,6 +208,22 @@ func (m *ChainEdge) String() string {
 	return fmt.Sprintf("ChainEdge{Name: %v, From: %v, To: %v}", m.Name, m.From, m.To)
 }
 
+//Cursors helper to enable cursor decoding
+type Cursors struct {
+	Cursors []*Cursor `json:"cursors,omitempty"`
+}
+
+//Cursor domain object
+type Cursor struct {
+	UID    string   `json:"uid,omitempty"`
+	Cursor string   `json:"cursor,omitempty"`
+	DType  []string `json:"dgraph.type,omitempty"`
+}
+
+func (m *Cursor) String() string {
+	return fmt.Sprintf("Cursor{UID: %v, Cursor: %v, DType: %v}", m.UID, m.Cursor, m.DType)
+}
+
 //ToTime Converts string time to time.Time
 func ToTime(strTime string) *time.Time {
 	t, err := time.Parse("2006-01-02T15:04:05", strTime)
