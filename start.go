@@ -12,7 +12,6 @@ import (
 	"github.com/sebastianmontero/dfuse-firehose-client/dfclient"
 	"github.com/sebastianmontero/hypha-document-cache-go/dgraph"
 	"github.com/sebastianmontero/hypha-document-cache-go/doccache"
-	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -116,7 +115,7 @@ func main() {
 		startBlock,
 	)
 
-	client, err := dfclient.NewDfClient(firehoseEndpoint, dfuseAPIKey, eosEndpoint, log.InfoLevel)
+	client, err := dfclient.NewDfClient(firehoseEndpoint, dfuseAPIKey, eosEndpoint, nil)
 	if err != nil {
 		panic(fmt.Sprintln("Error creating dfclient: ", err))
 	}

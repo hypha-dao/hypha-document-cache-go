@@ -626,6 +626,8 @@ github.com/rs/cors v0.0.0-20160617231935-a62a804a8a00/go.mod h1:gFx+x8UowdsKA9Ac
 github.com/rs/cors v1.7.0/go.mod h1:gFx+x8UowdsKA9AchylcLynDq+nNFfI8FkUZdN/jGCU=
 github.com/rs/xhandler v0.0.0-20160618193221-ed27b6fd6521/go.mod h1:RvLn4FgxWubrpZHtQLnOf6EwhN2hEMusxZOhcW9H3UQ=
 github.com/rs/xid v1.2.1/go.mod h1:+uKXf+4Djp6Md1KODXJxgGQPKngRmWyn10oCKFzNHOQ=
+github.com/rs/zerolog v1.20.0 h1:38k9hgtUBdxFwE34yS8rTHmHBa4eN16E4DJlv177LNs=
+github.com/rs/zerolog v1.20.0/go.mod h1:IzD0RJ65iWH0w97OQQebJEvTZYvsCUm9WVLWBQrJRjo=
 github.com/russross/blackfriday v1.5.2/go.mod h1:JO/DiYxRf+HjHt06OyowR9PTA263kcR/rfWxYHBV53g=
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/ryanuber/columnize v0.0.0-20170703205827-abc90934186a/go.mod h1:sm1tb6uqfes/u+d4ooFouqFdy9/2g9QGwK3SQygK0Ts=
@@ -635,6 +637,12 @@ github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210212222228-32b73ec0
 github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210212222228-32b73ec0793d/go.mod h1:JIYS9FCLshTpz6IlSPQGQ0+DMNupgkF2mRNn4LyvsMs=
 github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210212235710-2e1061c06001 h1:zqMF4nOsCY8uok/9mGT1/ByfhZ49HsjxJ9FOUBmbkbE=
 github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210212235710-2e1061c06001/go.mod h1:JIYS9FCLshTpz6IlSPQGQ0+DMNupgkF2mRNn4LyvsMs=
+github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210213005013-6e861f08f326 h1:k0xZRq7PCU4vIA7c41qeSHclKNevg2cawtE5wP5B8aE=
+github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210213005013-6e861f08f326/go.mod h1:e3ZHFhsekczDOcrUV1cLTHea1T/MSYOPzaGUv0pgzQQ=
+github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210213204324-2c75717bc9ca h1:fB5DGxzXNmGUzyb4hudebpIZIlbZ5hzQnkUaT43fgeU=
+github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210213204324-2c75717bc9ca/go.mod h1:S49jglAnM4qvEn1aJCPgGMOL2pAggOgrqyB+WkhZJkw=
+github.com/sebastianmontero/slog-go v0.0.0-20210213204103-60eda76e8d74 h1:eNvvwYAh/JZX6pjCTjBqjxfZBuUtZnNjWkr0ew471x0=
+github.com/sebastianmontero/slog-go v0.0.0-20210213204103-60eda76e8d74/go.mod h1:OKZ+YJ89kDlx6URd2SlZqfJDl7ULsHVysV9iZErXtsI=
 github.com/sergi/go-diff v1.0.0/go.mod h1:0CfEIISq7TuYL3j771MWULgwwjU+GofnZX9QAmXWZgo=
 github.com/sergi/go-diff v1.0.1-0.20180205163309-da645544ed44/go.mod h1:0CfEIISq7TuYL3j771MWULgwwjU+GofnZX9QAmXWZgo=
 github.com/sethvargo/go-retry v0.1.0/go.mod h1:JzIOdZqQDNpPkQDmcqgtteAcxFLtYpNF/zJCM1ysDg8=
@@ -987,6 +995,7 @@ golang.org/x/tools v0.0.0-20190606124116-d0a3d012864b/go.mod h1:/rFqwRUd4F7ZHNgw
 golang.org/x/tools v0.0.0-20190621195816-6e04913cbbac/go.mod h1:/rFqwRUd4F7ZHNgwSSTFct+R/Kf4OFW1sUzUTQQTgfc=
 golang.org/x/tools v0.0.0-20190628153133-6cdbf07be9d0/go.mod h1:/rFqwRUd4F7ZHNgwSSTFct+R/Kf4OFW1sUzUTQQTgfc=
 golang.org/x/tools v0.0.0-20190816200558-6889da9d5479/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
+golang.org/x/tools v0.0.0-20190828213141-aed303cbaa74/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20190911174233-4f2ddba30aff/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191012152004-8de300cfc20a/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191029041327-9cc4af7d6b2c/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
