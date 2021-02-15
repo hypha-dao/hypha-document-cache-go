@@ -9,15 +9,18 @@ import (
 	"github.com/dfuse-io/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
+	"github.com/rs/zerolog"
 	"github.com/sebastianmontero/dfuse-firehose-client/dfclient"
-	"github.com/sebastianmontero/hypha-document-cache-go/dgraph"
+	"github.com/sebastianmontero/dgraph-go-client/dgraph"
 	"github.com/sebastianmontero/hypha-document-cache-go/doccache"
+	"github.com/sebastianmontero/slog-go/slog"
 )
 
 var (
 	contract  = os.Getenv("CONTRACT_NAME")
 	docTable  = os.Getenv("DOC_TABLE_NAME")
 	edgeTable = os.Getenv("EDGE_TABLE_NAME")
+	log       *slog.Log
 )
 
 type deltaStreamHandler struct {
@@ -26,33 +29,28 @@ type deltaStreamHandler struct {
 }
 
 func (m *deltaStreamHandler) OnDelta(delta *dfclient.TableDelta, cursor string, forkStep pbbstream.ForkStep) {
-	fmt.Println("Cursor: ", cursor, "Fork Step:", forkStep, "\nOn Delta: ", delta)
+	log.Debugf("On Delta: \nCursor: %v \nFork Step: %v \nDelta %v ", cursor, forkStep, delta)
 	if delta.TableName == docTable {
 		chainDoc := &doccache.ChainDocument{}
 		switch delta.Operation {
 		case pbcodec.DBOp_OPERATION_INSERT, pbcodec.DBOp_OPERATION_UPDATE:
-			fmt.Println("Unmarshalling new data: ", string(delta.NewData))
 			err := json.Unmarshal(delta.NewData, chainDoc)
 			if err != nil {
-				fmt.Println("Error unmarshalling doc new data: ", err)
-				panic(fmt.Sprintln("Error unmarshalling doc new data: ", err))
+				log.Panicf(err, "Error unmarshalling doc new data: %v", string(delta.NewData))
 			}
-			fmt.Println("Storing doc: ", chainDoc)
+			log.Tracef("Storing doc: ", chainDoc)
 			err = m.doccache.StoreDocument(chainDoc, cursor)
 			if err != nil {
-				fmt.Println("Failed to store doc: ", err)
-				panic(fmt.Sprintln("Failed to store doc: ", err))
+				log.Panicf(err, "Failed to store doc: %", chainDoc)
 			}
 		case pbcodec.DBOp_OPERATION_REMOVE:
 			err := json.Unmarshal(delta.OldData, chainDoc)
 			if err != nil {
-				fmt.Println("Error unmarshalling doc old data: ", err)
-				panic(fmt.Sprintln("Error unmarshalling doc old data: ", err))
+				log.Panicf(err, "Error unmarshalling doc old data: %v", string(delta.OldData))
 			}
 			err = m.doccache.DeleteDocument(chainDoc, cursor)
 			if err != nil {
-				fmt.Println("Failed to delete doc: ", err)
-				panic(fmt.Sprintln("Failed to delete doc: ", err))
+				log.Panicf(err, "Failed to delete doc: ", chainDoc)
 			}
 		}
 	} else if delta.TableName == edgeTable {
@@ -71,41 +69,41 @@ func (m *deltaStreamHandler) OnDelta(delta *dfclient.TableDelta, cursor string, 
 			}
 			err := json.Unmarshal(deltaData, chainEdge)
 			if err != nil {
-				fmt.Println("Error unmarshalling edge data: ", err)
-				// panic(fmt.Sprintln("Error unmarshalling edge data: ", err))
+				log.Panicf(err, "Error unmarshalling edge data: ", chainEdge)
 			}
 			err = m.doccache.MutateEdge(chainEdge, deleteOp, cursor)
 			if err != nil {
-				fmt.Printf("Failed to mutate doc, deleteOp: %v, edge: %v, err: %v", deleteOp, chainEdge, err)
-				// panic(fmt.Sprintf("Failed to mutate doc, deleteOp: %v, edge: %v, err: %v ", deleteOp, chainEdge, err))
+				log.Errorf(err, "Failed to mutate doc, deleteOp: %v, edge: %v", deleteOp, chainEdge)
 			}
 		case pbcodec.DBOp_OPERATION_UPDATE:
-			panic(fmt.Sprintln("Edge updating is not handled: ", delta))
+			log.Panicf(nil, "Edge updating is not handled: %v", delta)
 		}
 	}
 	m.cursor = cursor
 }
 
 func (m *deltaStreamHandler) OnError(err error) {
-	fmt.Println("On Error: ", err)
+	log.Error(err, "On Error")
 }
 
 func (m *deltaStreamHandler) OnComplete(lastBlockRef bstream.BlockRef) {
-	fmt.Println("On Complete Last Block Ref: ", lastBlockRef)
+	log.Infof("On Complete Last Block Ref: %v", lastBlockRef)
 }
 
 func main() {
+	log = slog.New(&slog.Config{Pretty: true, Level: zerolog.DebugLevel}, "start-doccache")
+
 	firehoseEndpoint := os.Getenv("FIREHOSE_ENDPOINT")
-	dfuseAPIKey := "server_eeb2882943ae420bfb3eb9bf3d78ed9d"
+	dfuseAPIKey := os.Getenv("DFUSE_API_KEY")
 	eosEndpoint := os.Getenv("EOS_ENDPOINT")
 	dgraphEndpoint := fmt.Sprintf("%v:%v", os.Getenv("DGRAPH_ALPHA_HOST"), os.Getenv("DGRAPH_ALPHA_EXTERNAL_PORT"))
 	startBlock, err := strconv.ParseInt(os.Getenv("START_BLOCK"), 10, 64)
 	if err != nil {
-		panic(fmt.Sprintln("Unable to parse start block: ", err))
+		log.Panicf(err, "Unable to parse start block: %v", os.Getenv("START_BLOCK"))
 	}
 
-	fmt.Printf(
-		"Env Vars contract: %v \ndocTable: %v \nedgeTable: %v \nfirehoseEndpoint: %v \neosEndpoint: %v \n dgraphEndpoint: %v \n startBlock: %v",
+	log.Infof(
+		"Env Vars contract: %v \ndocTable: %v \nedgeTable: %v \nfirehoseEndpoint: %v \neosEndpoint: %v \ndgraphEndpoint: %v \nstartBlock: %v",
 		contract,
 		docTable,
 		edgeTable,
@@ -117,25 +115,17 @@ func main() {
 
 	client, err := dfclient.NewDfClient(firehoseEndpoint, dfuseAPIKey, eosEndpoint, nil)
 	if err != nil {
-		panic(fmt.Sprintln("Error creating dfclient: ", err))
+		log.Panic(err, "Error creating dfclient")
 	}
 	dg, err := dgraph.New(dgraphEndpoint)
 	if err != nil {
-		panic(fmt.Sprintln("Error creating dgraph client: ", err))
+		log.Panic(err, "Error creating dgraph client")
 	}
-	cache, err := doccache.New(dg)
+	cache, err := doccache.New(dg, nil)
 	if err != nil {
-		panic(fmt.Sprintln("Error creating doccache client: ", err))
+		log.Panic(err, "Error creating doccache client")
 	}
 
-	// client.BlockStream(&pbbstream.BlocksRequestV2{
-	// 	StartBlockNum:     87822500,
-	// 	StartCursor:       "",
-	// 	StopBlockNum:      87823501,
-	// 	ForkSteps:         []pbbstream.ForkStep{pbbstream.ForkStep_STEP_IRREVERSIBLE},
-	// 	IncludeFilterExpr: "receiver in ['eosio.token']",
-	// 	Details:           pbbstream.BlockDetails_BLOCK_DETAILS_FULL,
-	// }, &blockStreamHandler{})
 	deltaRequest := &dfclient.DeltaStreamRequest{
 		StartBlockNum:  startBlock,
 		StartCursor:    "",

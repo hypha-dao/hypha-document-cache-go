@@ -2,12 +2,11 @@ package doccache
 
 import (
 	"encoding/json"
-	"log"
 	"os"
 	"reflect"
 	"testing"
 
-	"github.com/sebastianmontero/hypha-document-cache-go/dgraph"
+	"github.com/sebastianmontero/dgraph-go-client/dgraph"
 )
 
 var dg *dgraph.Dgraph
@@ -28,15 +27,15 @@ func beforeAll() {
 	var err error
 	dg, err = dgraph.New("")
 	if err != nil {
-		log.Fatalf("Unable to create dgraph: %v", err)
+		log.Fatal(err, "Unable to create dgraph")
 	}
 	err = dg.DropAll()
 	if err != nil {
-		log.Fatalf("Unable to drop all: %v", err)
+		log.Fatal(err, "Unable to drop all")
 	}
-	doccache, err = New(dg)
+	doccache, err = New(dg, nil)
 	if err != nil {
-		log.Fatalf("Failed creating docCache: %v", err)
+		log.Fatal(err, "Failed creating docCache")
 	}
 }
 

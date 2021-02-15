@@ -2,11 +2,11 @@ package doccache
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/dgraph-io/dgo/v2/protos/api"
-	"github.com/sebastianmontero/hypha-document-cache-go/dgraph"
+	"github.com/sebastianmontero/dgraph-go-client/dgraph"
+	"github.com/sebastianmontero/slog-go/slog"
 )
 
 const schema = `
@@ -89,6 +89,8 @@ const certificatesRequest = `
       },
 		`
 
+var log *slog.Log
+
 //RequestConfig enables query configuration
 type RequestConfig struct {
 	ContentGroups bool
@@ -104,7 +106,9 @@ type Doccache struct {
 }
 
 //New creates a new doccache
-func New(dg *dgraph.Dgraph) (*Doccache, error) {
+func New(dg *dgraph.Dgraph, logConfig *slog.Config) (*Doccache, error) {
+	log = slog.New(logConfig, "doccache")
+
 	m := &Doccache{
 		dgraph:           dg,
 		documentFieldMap: make(map[string]*dgraph.SchemaField),
@@ -292,13 +296,13 @@ func (m *Doccache) StoreDocument(chainDoc *ChainDocument, cursor string) error {
 		return err
 	}
 	if doc == nil {
-		log.Printf("Creating document: %v", chainDoc.Hash)
+		log.Infof("Creating document: %v", chainDoc.Hash)
 		doc, err = m.transformNew(chainDoc)
 		if err != nil {
 			return err
 		}
 	} else {
-		log.Printf("Updating certificates for document: <%v>%v", doc.UID, doc.Hash)
+		log.Infof("Updating certificates for document: <%v>%v", doc.UID, doc.Hash)
 		doc.UpdateCertificates(chainDoc.Certificates)
 	}
 
@@ -316,11 +320,11 @@ func (m *Doccache) DeleteDocument(chainDoc *ChainDocument, cursor string) error 
 		return err
 	}
 	if uid != "" {
-		log.Printf("Deleting Node: <%v>%v", uid, chainDoc.Hash)
+		log.Infof("Deleting Node: <%v>%v", uid, chainDoc.Hash)
 		mutation := m.dgraph.DeleteNodeMutation(uid)
 		return m.mutate(mutation, cursor)
 	}
-	log.Printf("Document: %v not found, couldn't delete", chainDoc.Hash)
+	log.Infof("Document: %v not found, couldn't delete", chainDoc.Hash)
 	return nil
 }
 
@@ -342,7 +346,7 @@ func (m *Doccache) MutateEdge(chainEdge *ChainEdge, deleteOp bool, cursor string
 	if !ok {
 		return fmt.Errorf("To node of the relationship: [Edge: %v, From: %v, To: %v] does not exist, Delete Op: %v", chainEdge.Name, chainEdge.From, chainEdge.To, deleteOp)
 	}
-	log.Printf("Mutating [Edge: %v, From: <%v>%v, To: <%v>%v] Delete Op: %v", chainEdge.Name, fromUID, chainEdge.From, toUID, chainEdge.To, deleteOp)
+	log.Infof("Mutating [Edge: %v, From: <%v>%v, To: <%v>%v] Delete Op: %v", chainEdge.Name, fromUID, chainEdge.From, toUID, chainEdge.To, deleteOp)
 	mutation := m.dgraph.EdgeMutation(fromUID, toUID, chainEdge.Name, deleteOp)
 	return m.mutate(mutation, cursor)
 
@@ -391,7 +395,7 @@ func (m *Doccache) transformNew(chainDoc *ChainDocument) (*Document, error) {
 				},
 			}
 		} else {
-			log.Printf("Document with hash: %v not found, referenced from document: %v", checksumContent.Value, chainDoc.Hash)
+			log.Infof("Document with hash: %v not found, referenced from document: %v", checksumContent.Value, chainDoc.Hash)
 		}
 	}
 	return doc, nil

@@ -2,7 +2,6 @@ package doccache
 
 import (
 	"fmt"
-	"log"
 	"time"
 )
 
@@ -230,7 +229,7 @@ func ToTime(strTime string) *time.Time {
 	if err != nil {
 		t, err = time.Parse("2006-01-02T15:04:05.000", strTime)
 		if err != nil {
-			log.Fatalf("Failed to parse datetime: %v, error: %v", strTime, err)
+			log.Errorf(err, "Failed to parse datetime: %v", strTime)
 		}
 	}
 	return &t

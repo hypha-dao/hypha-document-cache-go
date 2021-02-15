@@ -9,5 +9,6 @@ require (
 	github.com/dgraph-io/dgo/v2 v2.2.0
 	github.com/rs/zerolog v1.20.0
 	github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210213204324-2c75717bc9ca
-	google.golang.org/grpc v1.35.0
+	github.com/sebastianmontero/dgraph-go-client v0.0.0-20210213215931-344d1e456654
+	github.com/sebastianmontero/slog-go v0.0.0-20210213204103-60eda76e8d74
 )
