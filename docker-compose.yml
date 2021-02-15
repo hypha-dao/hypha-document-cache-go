@@ -34,15 +34,14 @@ services:
       - DOC_TABLE_NAME
       - EDGE_TABLE_NAME
       - FIREHOSE_ENDPOINT
+      - DFUSE_API_KEY
       - EOS_ENDPOINT
       - DGRAPH_ALPHA_HOST
       - DGRAPH_ALPHA_EXTERNAL_PORT
       - START_BLOCK
-      - DATA_PATH
-      - STORE_NAME
       - PROMETHEUS_PORT
     depends_on:
       - zero
       - alpha
       - ratel
-    # restart: on-failure
+    restart: on-failure
