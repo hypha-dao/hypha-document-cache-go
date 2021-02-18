@@ -44,7 +44,7 @@ func afterAll() {
 }
 
 func TestOpCycle(t *testing.T) {
-	if doccache.cursor.UID == "" {
+	if doccache.Cursor.UID == "" {
 		t.Fatalf("Cursor should have UID already, it should be initialized on the creation of the doccache")
 	}
 
@@ -391,8 +391,8 @@ func TestOpCycle(t *testing.T) {
 }
 
 func validateCursor(cursor string, t *testing.T) {
-	if doccache.cursor.Cursor != cursor {
-		t.Fatalf("Expected in memory cursor to be %v found: %v", cursor, doccache.cursor.Cursor)
+	if doccache.Cursor.Cursor != cursor {
+		t.Fatalf("Expected in memory cursor to be %v found: %v", cursor, doccache.Cursor.Cursor)
 	}
 	c, err := doccache.getCursor()
 	if err != nil {

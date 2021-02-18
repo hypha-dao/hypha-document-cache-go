@@ -128,7 +128,7 @@ func main() {
 
 	deltaRequest := &dfclient.DeltaStreamRequest{
 		StartBlockNum:  startBlock,
-		StartCursor:    "",
+		StartCursor:    cache.Cursor.Cursor,
 		StopBlockNum:   0,
 		ForkSteps:      []pbbstream.ForkStep{pbbstream.ForkStep_STEP_NEW, pbbstream.ForkStep_STEP_UNDO},
 		ReverseUndoOps: true,

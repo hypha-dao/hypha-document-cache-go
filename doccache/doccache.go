@@ -102,7 +102,7 @@ type RequestConfig struct {
 type Doccache struct {
 	dgraph           *dgraph.Dgraph
 	documentFieldMap map[string]*dgraph.SchemaField
-	cursor           *Cursor
+	Cursor           *Cursor
 }
 
 //New creates a new doccache
@@ -122,7 +122,7 @@ func New(dg *dgraph.Dgraph, logConfig *slog.Config) (*Doccache, error) {
 	if err != nil {
 		return nil, err
 	}
-	m.cursor = cursor
+	m.Cursor = cursor
 	return m, nil
 }
 
@@ -280,8 +280,8 @@ func (m *Doccache) GetUID(hash string) (string, error) {
 }
 
 func (m *Doccache) mutate(mutation *api.Mutation, cursor string) error {
-	m.cursor.Cursor = cursor
-	cursorMutation, err := m.cursorMutation(m.cursor)
+	m.Cursor.Cursor = cursor
+	cursorMutation, err := m.cursorMutation(m.Cursor)
 	if err != nil {
 		return err
 	}
