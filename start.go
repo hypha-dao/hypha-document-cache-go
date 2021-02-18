@@ -125,7 +125,7 @@ func main() {
 	if err != nil {
 		log.Panic(err, "Error creating doccache client")
 	}
-
+	log.Infof("Cursor: %v", cache.Cursor)
 	deltaRequest := &dfclient.DeltaStreamRequest{
 		StartBlockNum:  startBlock,
 		StartCursor:    cache.Cursor.Cursor,
