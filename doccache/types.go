@@ -167,6 +167,16 @@ type ChainContent struct {
 	Value []interface{} `json:"value,omitempty"`
 }
 
+// func (m *ChainContent) UnmarshalJSON(b []byte) error {
+// 	if err := json.Unmarshal(b, m); err != nil {
+// 		return err
+// 	}
+// 	if fmt.Sprintf("%v", m.Value[0]) == "checksum256" {
+// 		m.Value[1] = strings.ToUpper(fmt.Sprintf("%v", m.Value[1]))
+// 	}
+// 	return nil
+// }
+
 func (m *ChainContent) String() string {
 	return fmt.Sprintf("ChainContent{Label: %v, Value: %v}", m.Label, m.Value)
 }
@@ -192,6 +202,14 @@ type ChainDocument struct {
 	Certificates  []*ChainCertificate `json:"certificates,omitempty"`
 }
 
+// func (m *ChainDocument) UnmarshalJSON(b []byte) error {
+// 	if err := json.Unmarshal(b, m); err != nil {
+// 		return err
+// 	}
+// 	m.Hash = strings.ToUpper(m.Hash)
+// 	return nil
+// }
+
 func (m *ChainDocument) String() string {
 	return fmt.Sprintf("ChainDocument{ID: %v, Hash: %v, CreatedDate: %v, Creator: %v, Contents: %v, Certificates: %v}", m.ID, m.Hash, m.CreatedDate, m.Creator, m.ContentGroups, m.Certificates)
 }
@@ -202,6 +220,15 @@ type ChainEdge struct {
 	From string `json:"from_node,omitempty"`
 	To   string `json:"to_node,omitempty"`
 }
+
+// func (m *ChainEdge) UnmarshalJSON(b []byte) error {
+// 	if err := json.Unmarshal(b, m); err != nil {
+// 		return err
+// 	}
+// 	m.From = strings.ToUpper(m.From)
+// 	m.To = strings.ToUpper(m.To)
+// 	return nil
+// }
 
 func (m *ChainEdge) String() string {
 	return fmt.Sprintf("ChainEdge{Name: %v, From: %v, To: %v}", m.Name, m.From, m.To)
