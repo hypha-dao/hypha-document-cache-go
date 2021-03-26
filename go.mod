@@ -9,7 +9,7 @@ require (
 	github.com/dgraph-io/dgo/v2 v2.2.0
 	github.com/prometheus/client_golang v1.2.1
 	github.com/rs/zerolog v1.20.0
-	github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210326160655-7918d6787b53
+	github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210326205105-b2a7b2ba2c5c
 	github.com/sebastianmontero/dgraph-go-client v0.0.0-20210213215931-344d1e456654
 	github.com/sebastianmontero/slog-go v0.0.0-20210213204103-60eda76e8d74
 )
