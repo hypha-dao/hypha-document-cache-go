@@ -13,6 +13,8 @@ import (
 	"github.com/sebastianmontero/dfuse-firehose-client/dfclient"
 	"github.com/sebastianmontero/dgraph-go-client/dgraph"
 	"github.com/sebastianmontero/hypha-document-cache-go/doccache"
+	"github.com/sebastianmontero/hypha-document-cache-go/monitoring"
+	"github.com/sebastianmontero/hypha-document-cache-go/monitoring/metrics"
 	"github.com/sebastianmontero/slog-go/slog"
 )
 
@@ -43,6 +45,7 @@ func (m *deltaStreamHandler) OnDelta(delta *dfclient.TableDelta, cursor string, 
 			if err != nil {
 				log.Panicf(err, "Failed to store doc: %", chainDoc)
 			}
+			metrics.CreatedDocs.Inc()
 		case pbcodec.DBOp_OPERATION_REMOVE:
 			err := json.Unmarshal(delta.OldData, chainDoc)
 			if err != nil {
@@ -52,6 +55,7 @@ func (m *deltaStreamHandler) OnDelta(delta *dfclient.TableDelta, cursor string, 
 			if err != nil {
 				log.Panicf(err, "Failed to delete doc: ", chainDoc)
 			}
+			metrics.DeletedDocs.Inc()
 		}
 	} else if delta.TableName == edgeTable {
 		switch delta.Operation {
@@ -75,11 +79,25 @@ func (m *deltaStreamHandler) OnDelta(delta *dfclient.TableDelta, cursor string, 
 			if err != nil {
 				log.Errorf(err, "Failed to mutate doc, deleteOp: %v, edge: %v", deleteOp, chainEdge)
 			}
+			if deleteOp {
+				metrics.DeletedEdges.Inc()
+			} else {
+				metrics.CreatedEdges.Inc()
+			}
+
 		case pbcodec.DBOp_OPERATION_UPDATE:
 			log.Panicf(nil, "Edge updating is not handled: %v", delta)
 		}
 	}
+	metrics.BlockNumber.Set(float64(delta.Block.Number))
 	m.cursor = cursor
+}
+
+func (m *deltaStreamHandler) OnHeartBeat(block *pbcodec.Block, cursor string) {
+	err := m.doccache.UpdateCursor(cursor)
+	if err != nil {
+		log.Panicf(err, "Failed to update cursor: ", cursor)
+	}
 }
 
 func (m *deltaStreamHandler) OnError(err error) {
@@ -92,18 +110,37 @@ func (m *deltaStreamHandler) OnComplete(lastBlockRef bstream.BlockRef) {
 
 func main() {
 	log = slog.New(&slog.Config{Pretty: true, Level: zerolog.DebugLevel}, "start-doccache")
-
 	firehoseEndpoint := os.Getenv("FIREHOSE_ENDPOINT")
 	dfuseAPIKey := os.Getenv("DFUSE_API_KEY")
 	eosEndpoint := os.Getenv("EOS_ENDPOINT")
 	dgraphEndpoint := fmt.Sprintf("%v:%v", os.Getenv("DGRAPH_ALPHA_HOST"), os.Getenv("DGRAPH_ALPHA_EXTERNAL_PORT"))
+
 	startBlock, err := strconv.ParseInt(os.Getenv("START_BLOCK"), 10, 64)
 	if err != nil {
 		log.Panicf(err, "Unable to parse start block: %v", os.Getenv("START_BLOCK"))
 	}
 
+	prometheusPort, err := strconv.ParseUint(os.Getenv("PROMETHEUS_PORT"), 10, 32)
+	if err != nil {
+		log.Panicf(err, "Unable to parse prometheus port: %v", os.Getenv("PROMETHEUS_PORT"))
+	}
+
+	heartBeatFrequency, err := strconv.ParseUint(os.Getenv("HEART_BEAT_FREQUENCY"), 10, 32)
+	if err != nil {
+		log.Panicf(err, "Unable to parse prometheus port: %v", os.Getenv("PROMETHEUS_PORT"))
+	}
+
 	log.Infof(
-		"Env Vars contract: %v \ndocTable: %v \nedgeTable: %v \nfirehoseEndpoint: %v \neosEndpoint: %v \ndgraphEndpoint: %v \nstartBlock: %v",
+		`Env Vars
+		 contract: %v
+		 docTable: %v
+		 edgeTable: %v
+		 firehoseEndpoint: %v
+		 eosEndpoint: %v
+		 dgraphEndpoint: %v
+		 startBlock: %v
+		 prometheusPort: %v
+		 heartBeatFrequency: %v`,
 		contract,
 		docTable,
 		edgeTable,
@@ -111,7 +148,14 @@ func main() {
 		eosEndpoint,
 		dgraphEndpoint,
 		startBlock,
+		prometheusPort,
+		heartBeatFrequency,
 	)
+
+	go monitoring.SetupEndpoint(uint(prometheusPort))
+	if err != nil {
+		log.Panic(err, "Error seting up prometheus endpoint")
+	}
 
 	client, err := dfclient.NewDfClient(firehoseEndpoint, dfuseAPIKey, eosEndpoint, nil)
 	if err != nil {
@@ -127,11 +171,12 @@ func main() {
 	}
 	log.Infof("Cursor: %v", cache.Cursor)
 	deltaRequest := &dfclient.DeltaStreamRequest{
-		StartBlockNum:  startBlock,
-		StartCursor:    cache.Cursor.Cursor,
-		StopBlockNum:   0,
-		ForkSteps:      []pbbstream.ForkStep{pbbstream.ForkStep_STEP_NEW, pbbstream.ForkStep_STEP_UNDO},
-		ReverseUndoOps: true,
+		StartBlockNum:      startBlock,
+		StartCursor:        cache.Cursor.Cursor,
+		StopBlockNum:       0,
+		ForkSteps:          []pbbstream.ForkStep{pbbstream.ForkStep_STEP_NEW, pbbstream.ForkStep_STEP_UNDO},
+		ReverseUndoOps:     true,
+		HeartBeatFrequency: uint(heartBeatFrequency),
 	}
 	// deltaRequest.AddTables("eosio.token", []string{"balance"})
 	deltaRequest.AddTables(contract, []string{docTable, edgeTable})

@@ -40,6 +40,7 @@ services:
       - DGRAPH_ALPHA_EXTERNAL_PORT
       - START_BLOCK
       - PROMETHEUS_PORT
+      - HEART_BEAT_FREQUENCY
     depends_on:
       - zero
       - alpha

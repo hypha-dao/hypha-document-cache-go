@@ -631,16 +631,12 @@ github.com/rs/zerolog v1.20.0/go.mod h1:IzD0RJ65iWH0w97OQQebJEvTZYvsCUm9WVLWBQrJ
 github.com/russross/blackfriday v1.5.2/go.mod h1:JO/DiYxRf+HjHt06OyowR9PTA263kcR/rfWxYHBV53g=
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/ryanuber/columnize v0.0.0-20170703205827-abc90934186a/go.mod h1:sm1tb6uqfes/u+d4ooFouqFdy9/2g9QGwK3SQygK0Ts=
-github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210209005013-e673ea4a8d0d h1:3qzxx8zA7E4NpY3/duRTpUuza0oIeNK0990QIIWaobs=
-github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210209005013-e673ea4a8d0d/go.mod h1:SbHeHIVzM1fBSFHHXOvZPBL2+xziboRWeKihOYy5bZk=
-github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210212222228-32b73ec0793d h1:db08JZgWh1qctjo873N3FGE7umZgu6YlnSEicTy4Iao=
-github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210212222228-32b73ec0793d/go.mod h1:JIYS9FCLshTpz6IlSPQGQ0+DMNupgkF2mRNn4LyvsMs=
-github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210212235710-2e1061c06001 h1:zqMF4nOsCY8uok/9mGT1/ByfhZ49HsjxJ9FOUBmbkbE=
-github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210212235710-2e1061c06001/go.mod h1:JIYS9FCLshTpz6IlSPQGQ0+DMNupgkF2mRNn4LyvsMs=
-github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210213005013-6e861f08f326 h1:k0xZRq7PCU4vIA7c41qeSHclKNevg2cawtE5wP5B8aE=
-github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210213005013-6e861f08f326/go.mod h1:e3ZHFhsekczDOcrUV1cLTHea1T/MSYOPzaGUv0pgzQQ=
 github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210213204324-2c75717bc9ca h1:fB5DGxzXNmGUzyb4hudebpIZIlbZ5hzQnkUaT43fgeU=
 github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210213204324-2c75717bc9ca/go.mod h1:S49jglAnM4qvEn1aJCPgGMOL2pAggOgrqyB+WkhZJkw=
+github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210326153147-13efaa995b7b h1:/DYHuMS67AyQVp5purIB+MqYfMAzKZKTwx/FSzz/moA=
+github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210326153147-13efaa995b7b/go.mod h1:S49jglAnM4qvEn1aJCPgGMOL2pAggOgrqyB+WkhZJkw=
+github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210326160655-7918d6787b53 h1:p8aJqxTIaVDfCN0Hj/vAfQ0A/JgsD2jgQc0WidXETVs=
+github.com/sebastianmontero/dfuse-firehose-client v0.0.0-20210326160655-7918d6787b53/go.mod h1:S49jglAnM4qvEn1aJCPgGMOL2pAggOgrqyB+WkhZJkw=
 github.com/sebastianmontero/dgraph-go-client v0.0.0-20210213215931-344d1e456654 h1:VXSzZY1sZ0QLPvnnlgWC3tlprwAfyIrcThbN5dovNJI=
 github.com/sebastianmontero/dgraph-go-client v0.0.0-20210213215931-344d1e456654/go.mod h1:az53NkMof6OHCQWY7RncRAhuTQrONhoJIORx4OktGU0=
 github.com/sebastianmontero/slog-go v0.0.0-20210213204103-60eda76e8d74 h1:eNvvwYAh/JZX6pjCTjBqjxfZBuUtZnNjWkr0ew471x0=
@@ -674,8 +670,6 @@ github.com/shurcooL/webdavfs v0.0.0-20170829043945-18c3829fa133/go.mod h1:hKmq5k
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
 github.com/sirupsen/logrus v1.3.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=
 github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6MwdIuYE2rE=
-github.com/sirupsen/logrus v1.7.0 h1:ShrD1U9pZB12TX0cVy0DtePoCH97K8EtX+mg7ZARUtM=
-github.com/sirupsen/logrus v1.7.0/go.mod h1:yWOB1SBYBC5VeMP7gHvWumXLIWorT60ONWic61uBYv0=
 github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d/go.mod h1:OnSkiWE9lh6wB0YB77sQom3nweQdgAjqCqsofrRNTgc=
 github.com/smartystreets/goconvey v1.6.4/go.mod h1:syvi0/a8iFYH4r/RixwvyeAJjdLS9QV7WQ/tjFTllLA=
 github.com/soheilhy/cmux v0.1.4/go.mod h1:IM3LyeVVIOuxMH7sFAkER9+bJ4dT7Ms6E4xg4kGIyLM=
@@ -948,7 +942,6 @@ golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20190826190057-c7b8b68b1456/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191001151750-bb3f8db39f24/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191010194322-b09406accb47/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
-golang.org/x/sys v0.0.0-20191026070338-33540a1f6037/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191204072324-ce4227a45e2e/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191220142924-d4481acd189f/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191228213918-04cbcbbfeed8/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=

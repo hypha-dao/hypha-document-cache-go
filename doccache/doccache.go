@@ -289,6 +289,16 @@ func (m *Doccache) mutate(mutation *api.Mutation, cursor string) error {
 	return err
 }
 
+func (m *Doccache) UpdateCursor(cursor string) error {
+	m.Cursor.Cursor = cursor
+	cursorMutation, err := m.cursorMutation(m.Cursor)
+	if err != nil {
+		return err
+	}
+	_, err = m.dgraph.Mutate(cursorMutation)
+	return err
+}
+
 //StoreDocument Creates a new document or updates its certificates
 func (m *Doccache) StoreDocument(chainDoc *ChainDocument, cursor string) error {
 	doc, err := m.GetByHash(chainDoc.Hash, &RequestConfig{Certificates: true})
