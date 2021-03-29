@@ -98,6 +98,7 @@ func (m *deltaStreamHandler) OnHeartBeat(block *pbcodec.Block, cursor string) {
 	if err != nil {
 		log.Panicf(err, "Failed to update cursor: ", cursor)
 	}
+	metrics.BlockNumber.Set(float64(block.Number))
 }
 
 func (m *deltaStreamHandler) OnError(err error) {
