@@ -2,6 +2,7 @@ package doccache
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -15,6 +16,8 @@ type Content struct {
 	UID             string      `json:"uid,omitempty"`
 	Label           string      `json:"label,omitempty"`
 	Value           string      `json:"value,omitempty"`
+	TimeValue       *time.Time  `json:"time_value,omitempty"`
+	IntValue        *int64      `json:"int_value,omitempty"`
 	Type            string      `json:"type,omitempty"`
 	ContentSequence int         `json:"content_sequence"`
 	Document        []*Document `json:"document,omitempty"`
@@ -22,14 +25,25 @@ type Content struct {
 }
 
 //NewContent Creates a Content object based on a ChainContent
-func NewContent(chainContent *ChainContent, sequence int) *Content {
-	return &Content{
+func NewContent(chainContent *ChainContent, sequence int) (*Content, error) {
+	content := &Content{
 		Label:           chainContent.Label,
 		Type:            fmt.Sprintf("%v", chainContent.Value[0]),
 		Value:           fmt.Sprintf("%v", chainContent.Value[1]),
 		ContentSequence: sequence,
 		DType:           []string{"Content"},
 	}
+	if content.IsInt64() {
+		intValue, err := strconv.ParseInt(content.Value, 0, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse content value to int64, value: %v, error: %v", content.Value, err)
+		}
+		content.IntValue = &intValue
+	}
+	if content.IsTime() {
+		content.TimeValue = ToTime(content.Value)
+	}
+	return content, nil
 }
 
 //IsChecksum indicates if Content is of type Checksum
@@ -37,8 +51,18 @@ func (m *Content) IsChecksum() bool {
 	return m.Type == "checksum256"
 }
 
+//IsInt64 indicates if Content is of type int64
+func (m *Content) IsInt64() bool {
+	return m.Type == "int64"
+}
+
+//IsTime indicates if Content is of type time
+func (m *Content) IsTime() bool {
+	return m.Type == "time_point"
+}
+
 func (m *Content) String() string {
-	return fmt.Sprintf("Content{UID: %v, Label: %v, Value: %v, ContentSequence: %v, Document: %v, DType: %v}", m.UID, m.Label, m.Value, m.ContentSequence, m.Document, m.DType)
+	return fmt.Sprintf("Content{UID: %v, Label: %v, Value: %v, TimeValue: %v, IntValue: %v, ContentSequence: %v, Document: %v, DType: %v}", m.UID, m.Label, m.Value, m.TimeValue, m.IntValue, m.ContentSequence, m.Document, m.DType)
 }
 
 //ContentGroup domain object
@@ -50,16 +74,20 @@ type ContentGroup struct {
 }
 
 //NewContentGroup Creates a ContentGroup based on a ChainContentGroup
-func NewContentGroup(chainContentGroup []*ChainContent, sequence int) *ContentGroup {
+func NewContentGroup(chainContentGroup []*ChainContent, sequence int) (*ContentGroup, error) {
 	contents := make([]*Content, 0, len(chainContentGroup))
 	for i, chainContent := range chainContentGroup {
-		contents = append(contents, NewContent(chainContent, i+1))
+		content, err := NewContent(chainContent, i+1)
+		if err != nil {
+			return nil, err
+		}
+		contents = append(contents, content)
 	}
 	return &ContentGroup{
 		ContentGroupSequence: sequence,
 		Contents:             contents,
 		DType:                []string{"ContentGroup"},
-	}
+	}, nil
 }
 
 //GetChecksumContents returns Contents with checksum type
@@ -114,12 +142,16 @@ type Document struct {
 }
 
 //NewDocument creates a new document from a ChainDocument
-func NewDocument(chainDoc *ChainDocument) *Document {
+func NewDocument(chainDoc *ChainDocument) (*Document, error) {
 	contentGroups := make([]*ContentGroup, 0, len(chainDoc.ContentGroups))
 	certificates := make([]*Certificate, 0, len(chainDoc.Certificates))
 
 	for i, chainContentGroup := range chainDoc.ContentGroups {
-		contentGroups = append(contentGroups, NewContentGroup(chainContentGroup, i+1))
+		contentGroup, err := NewContentGroup(chainContentGroup, i+1)
+		if err != nil {
+			return nil, err
+		}
+		contentGroups = append(contentGroups, contentGroup)
 	}
 
 	for i, chainCertificate := range chainDoc.Certificates {
@@ -133,7 +165,7 @@ func NewDocument(chainDoc *ChainDocument) *Document {
 		ContentGroups: contentGroups,
 		Certificates:  certificates,
 		DType:         []string{"Document"},
-	}
+	}, nil
 }
 
 //GetChecksumContents returns Contents with checksum type

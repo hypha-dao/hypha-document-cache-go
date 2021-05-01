@@ -29,6 +29,8 @@ const schema = `
         type
         content_sequence
         document
+				time_value
+				int_value
       }
       
       type Certificate {
@@ -43,7 +45,7 @@ const schema = `
 			}
       
       hash: string @index(exact) .
-      created_date: datetime .
+      created_date: datetime @index(hour) .
       creator: string @index(term) .
       content_groups: [uid] .
       certificates: [uid] .
@@ -56,10 +58,12 @@ const schema = `
       type: string @index(term) .
       content_sequence: int .
       document: [uid] .
+			time_value: datetime @index(hour) .
+			int_value: int @index(int) .
       
       certifier: string @index(term) .
       notes: string .
-      certification_date: datetime .
+      certification_date: datetime @index(hour) .
       certification_sequence: int .
 
 			cursor: string @index(term) .
@@ -73,6 +77,8 @@ const contentGroupsRequest = `
           label
           value
 					type
+					time_value
+					int_value
 					dgraph.type
           document{
             expand(_all_)
@@ -350,11 +356,11 @@ func (m *Doccache) MutateEdge(chainEdge *ChainEdge, deleteOp bool, cursor string
 	}
 	fromUID, ok := hashUIDMap[chainEdge.From]
 	if !ok {
-		return fmt.Errorf("From node of the relationship: [Edge: %v, From: %v, To: %v] does not exist, Delete Op: %v", chainEdge.Name, chainEdge.From, chainEdge.To, deleteOp)
+		return fmt.Errorf("from node of the relationship: [Edge: %v, From: %v, To: %v] does not exist, Delete Op: %v", chainEdge.Name, chainEdge.From, chainEdge.To, deleteOp)
 	}
 	toUID, ok := hashUIDMap[chainEdge.To]
 	if !ok {
-		return fmt.Errorf("To node of the relationship: [Edge: %v, From: %v, To: %v] does not exist, Delete Op: %v", chainEdge.Name, chainEdge.From, chainEdge.To, deleteOp)
+		return fmt.Errorf("to node of the relationship: [Edge: %v, From: %v, To: %v] does not exist, Delete Op: %v", chainEdge.Name, chainEdge.From, chainEdge.To, deleteOp)
 	}
 	log.Infof("Mutating [Edge: %v, From: <%v>%v, To: <%v>%v] Delete Op: %v", chainEdge.Name, fromUID, chainEdge.From, toUID, chainEdge.To, deleteOp)
 	mutation := m.dgraph.EdgeMutation(fromUID, toUID, chainEdge.Name, deleteOp)
@@ -385,7 +391,10 @@ func (m *Doccache) updateDocumentTypeSchema(newField string) error {
 }
 
 func (m *Doccache) transformNew(chainDoc *ChainDocument) (*Document, error) {
-	doc := NewDocument(chainDoc)
+	doc, err := NewDocument(chainDoc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse chain doc: %v \n error: %v", chainDoc, err)
+	}
 	checksumContents := doc.GetChecksumContents()
 	hashes := make([]string, 0, len(checksumContents))
 	for _, checksumContent := range checksumContents {
