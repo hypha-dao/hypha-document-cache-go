@@ -1,6 +1,7 @@
 package doccache
 
 import (
+	"encoding/json"
 	"os"
 	"reflect"
 	"testing"
@@ -525,20 +526,20 @@ func compareCertificate(expected, actual *Certificate, t *testing.T) {
 	}
 }
 
-// func TestChainDocUnmarshall(t *testing.T) {
-// 	chainDocJSON := `{"certificates":[],"content_groups":[[{"label":"content_group_label","value":["string","settings"]},{"label":"root_node","value":["string","52a7ff82bd6f53b31285e97d6806d886eefb650e79754784e9d923d3df347c91"]},{"label":"paused","value":["int64",0]},{"label":"updated_date","value":["time_point","2021-01-11T21:52:32"]},{"label":"seeds_token_contract","value":["name","token.seeds"]},{"label":"voting_duration_sec","value":["int64",3600]},{"label":"seeds_deferral_factor_x100","value":["int64",100]},{"label":"telos_decide_contract","value":["name","trailservice"]},{"label":"husd_token_contract","value":["name","husd.hypha"]},{"label":"hypha_token_contract","value":["name","token.hypha"]},{"label":"seeds_escrow_contract","value":["name","escrow.seeds"]},{"label":"publisher_contract","value":["name","publsh.hypha"]},{"label":"treasury_contract","value":["name","bank.hypha"]},{"label":"last_ballot_id","value":["name","hypha1....1cf"]},{"label":"hypha_deferral_factor_x100","value":["int64",25]},{"label":"client_version","value":["string","0.2.0 pre-release"]},{"label":"contract_version","value":["string","0.2.0 pre-release"]}],[{"label":"content_group_label","value":["string","system"]},{"label":"type","value":["name","settings"]},{"label":"node_label","value":["string","Settings"]}]],"contract":"dao.hypha","created_date":"2021-01-11T21:52:32","creator":"dao.hypha","hash":"3e06f9f93fb27ad04a2e97dfce9796c2d51b73721d6270e1c0ea6bf7e79c944b","id":4957}`
-// 	chainDoc := &ChainDocument{}
-// 	err := json.Unmarshal([]byte(chainDocJSON), chainDoc)
-// 	if err != nil {
-// 		t.Fatalf("Unmarshalling failed: %v", err)
-// 	}
-// }
+func TestChainDocUnmarshall(t *testing.T) {
+	chainDocJSON := `{"certificates":[],"content_groups":[[{"label":"content_group_label","value":["string","settings"]},{"label":"root_node","value":["string","52a7ff82bd6f53b31285e97d6806d886eefb650e79754784e9d923d3df347c91"]},{"label":"paused","value":["int64",0]},{"label":"updated_date","value":["time_point","2021-01-11T21:52:32"]},{"label":"seeds_token_contract","value":["name","token.seeds"]},{"label":"voting_duration_sec","value":["int64",3600]},{"label":"seeds_deferral_factor_x100","value":["int64",100]},{"label":"telos_decide_contract","value":["name","trailservice"]},{"label":"husd_token_contract","value":["name","husd.hypha"]},{"label":"hypha_token_contract","value":["name","token.hypha"]},{"label":"seeds_escrow_contract","value":["name","escrow.seeds"]},{"label":"publisher_contract","value":["name","publsh.hypha"]},{"label":"treasury_contract","value":["name","bank.hypha"]},{"label":"last_ballot_id","value":["name","hypha1....1cf"]},{"label":"hypha_deferral_factor_x100","value":["int64",25]},{"label":"client_version","value":["string","0.2.0 pre-release"]},{"label":"contract_version","value":["string","0.2.0 pre-release"]}],[{"label":"content_group_label","value":["string","system"]},{"label":"type","value":["name","settings"]},{"label":"node_label","value":["string","Settings"]}]],"contract":"dao.hypha","created_date":"2021-01-11T21:52:32","creator":"dao.hypha","hash":"3e06f9f93fb27ad04a2e97dfce9796c2d51b73721d6270e1c0ea6bf7e79c944b","id":4957}`
+	chainDoc := &ChainDocument{}
+	err := json.Unmarshal([]byte(chainDocJSON), chainDoc)
+	if err != nil {
+		t.Fatalf("Unmarshalling failed: %v", err)
+	}
+}
 
-// func TestChainEdgeUnmarshall(t *testing.T) {
-// 	chainDocEdge := `{"contract":"dao.hypha","created_date":"2021-01-11T21:52:32","creator":"dao.hypha","edge_name":"settings","from_node":"52a7ff82bd6f53b31285e97d6806d886eefb650e79754784e9d923d3df347c91","from_node_edge_name_index":493623357,"from_node_to_node_index":340709097,"id":2475211255,"to_node":"3e06f9f93fb27ad04a2e97dfce9796c2d51b73721d6270e1c0ea6bf7e79c944b","to_node_edge_name_index":2119673673}`
-// 	chainEdge := &ChainEdge{}
-// 	err := json.Unmarshal([]byte(chainDocEdge), chainEdge)
-// 	if err != nil {
-// 		t.Fatalf("Unmarshalling failed: %v", err)
-// 	}
-// }
+func TestChainEdgeUnmarshall(t *testing.T) {
+	chainDocEdge := `{"contract":"dao.hypha","created_date":"2021-01-11T21:52:32","creator":"dao.hypha","edge_name":"settings","from_node":"52a7ff82bd6f53b31285e97d6806d886eefb650e79754784e9d923d3df347c91","from_node_edge_name_index":493623357,"from_node_to_node_index":340709097,"id":2475211255,"to_node":"3e06f9f93fb27ad04a2e97dfce9796c2d51b73721d6270e1c0ea6bf7e79c944b","to_node_edge_name_index":2119673673}`
+	chainEdge := &ChainEdge{}
+	err := json.Unmarshal([]byte(chainDocEdge), chainEdge)
+	if err != nil {
+		t.Fatalf("Unmarshalling failed: %v", err)
+	}
+}
